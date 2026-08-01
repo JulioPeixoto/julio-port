@@ -52,8 +52,8 @@ function PoofOne({ ev }: { ev: PoofEvent }) {
         ).normalize(),
         origin: new THREE.Vector3(
           (Math.random() - 0.5) * 0.7,
-          (Math.random() - 0.5) * 0.35,
-          (Math.random() - 0.5) * 0.7
+          (Math.random() - 0.5) * 0.7,
+          (Math.random() - 0.5) * 0.35
         ),
         reach: 0.5 + Math.random() * 0.4,
         size: 0.4 + Math.random() * 0.7

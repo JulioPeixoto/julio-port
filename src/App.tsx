@@ -21,7 +21,7 @@ export default function App() {
     ),
     LinkedIn: button(() =>
       window.open(
-        '//linkedin.com/in/SEU-USUARIO',
+        '//linkedin.com/in/julio-rafael-souza',
         '_blank',
         'noopener,noreferrer'
       )

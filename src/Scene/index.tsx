@@ -13,7 +13,7 @@ const Output = lazy(() => import('./Output'))
 const Particle = lazy(() => import('./Particle'))
 const Poof = lazy(() => import('./Poof'))
 
-const ROT: [number, number, number] = [Math.PI / 5, -Math.PI / 4, 0]
+const ROT: [number, number, number] = [Math.PI / 36, -Math.PI / 9, 0]
 
 const gridInvQ = new THREE.Quaternion()
   .setFromEuler(new THREE.Euler(...ROT))
@@ -30,7 +30,7 @@ export default function Scene() {
   })
 
   const span = useMemo(
-    () => Math.max(4, Math.max(viewport.width, viewport.height) * 1.1),
+    () => Math.max(4, Math.max(viewport.width, viewport.height) * 1.25),
     [viewport.height, viewport.width]
   )
 
@@ -38,33 +38,39 @@ export default function Scene() {
   const spacing = useMemo(() => span / steps, [span, steps])
   const count = gridSize ** 2
 
-  const cellPos = (i: number): [number, number, number] => [
-    (Math.floor(i / gridSize) - steps / 2) * spacing,
-    0,
-    ((i % gridSize) - steps / 2) * spacing
-  ]
+  const cellPos = (i: number): [number, number, number] => {
+    const row = Math.floor(i / gridSize)
+
+    return [
+      ((i % gridSize) - steps / 2) * spacing + (row % 2 ? spacing / 2 : 0),
+      (row - steps / 2) * spacing,
+      0
+    ]
+  }
 
   const highlight = useMemo(() => {
-    const o = new THREE.Vector3(
+    const target = new THREE.Vector3(
       (viewport.width / 2) * 0.4,
       (viewport.height / 2) * 0.4,
-      10
+      0
     ).applyQuaternion(gridInvQ)
 
-    const d = new THREE.Vector3(0, 0, -1).applyQuaternion(gridInvQ)
+    let best = -1
+    let bestDist = Infinity
 
-    if (Math.abs(d.y) < 0.0001) return -1
+    for (let i = 0; i < count; i += 1) {
+      const [x, y] = cellPos(i)
+      const dist = (x - target.x) ** 2 + (y - target.y) ** 2
 
-    const t = -o.y / d.y
+      if (dist < bestDist) {
+        bestDist = dist
+        best = i
+      }
+    }
 
-    const cell = (v: number) =>
-      Math.max(
-        0,
-        Math.min(gridSize - 1, Math.round(v / spacing + gridSize / 2 - 0.5))
-      )
-
-    return cell(o.x + t * d.x) * gridSize + cell(o.z + t * d.z)
-  }, [gridSize, spacing, viewport.height, viewport.width])
+    return best
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count, gridSize, spacing, steps, viewport.height, viewport.width])
 
   const [hidden, setHidden] = useState<Set<number>>(() => new Set())
 
