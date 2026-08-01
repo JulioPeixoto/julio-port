@@ -12,19 +12,22 @@ Base adaptada de [OutThisLife/brooklyn.sh](https://github.com/OutThisLife/brookl
 - **leva** para os controles (também usada como menu de navegação)
 - **nanostores** para estado
 - **Tailwind CSS 3** + PostCSS
-- **pnpm**
+- **bun** como package manager
 
 ## Rodando
 
 ```sh
-pnpm install
-pnpm dev       # servidor de desenvolvimento
-pnpm build     # build de produção em dist/
-pnpm preview   # serve o build
-pnpm check     # typecheck (tsc --noEmit)
-pnpm fmt       # prettier
-pnpm fix       # eslint --fix
+bun install
+bun run dev       # servidor de desenvolvimento
+bun run build     # build de produção em dist/
+bun run preview   # serve o build
+bun run check     # typecheck (tsc --noEmit)
+bun run fmt       # prettier
+bun run fix       # eslint --fix
 ```
+
+O `@radix-ui/react-portal` está pinado em `1.0.2` no campo `overrides` do
+`package.json`: o leva declara `^1.0.2` e quebra com as versões 1.1.x.
 
 ## Estrutura
 

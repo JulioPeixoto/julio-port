@@ -1,4 +1,5 @@
 node_modules/
 dist/
 *:Zone.Identifier
-.pnpm-store
+.vite/
+*.log
