@@ -1,17 +1,23 @@
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 
-import { createShape, eps } from '../../utils'
+import { BRICK, createShape } from '../../utils'
+
+const BEVEL = 0.025
 
 export default function Geometry() {
   const geometry = useMemo(() => {
-    const geometry = new THREE.ExtrudeGeometry(createShape(1, 1, 0.175), {
-      bevelEnabled: true,
-      bevelSegments: 16,
-      bevelSize: 0.15,
-      curveSegments: 16,
-      depth: 1 - 0.175 - eps
-    })
+    const geometry = new THREE.ExtrudeGeometry(
+      createShape(BRICK.width, BRICK.height, 0.04),
+      {
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: BEVEL,
+        bevelThickness: BEVEL,
+        curveSegments: 2,
+        depth: BRICK.depth - BEVEL * 2
+      }
+    )
 
     geometry.center()
 

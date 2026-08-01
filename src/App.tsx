@@ -7,7 +7,6 @@ import FX from './Scene/effects'
 
 const Scene = lazy(() => import('./Scene'))
 const Env = lazy(() => import('./Env'))
-const Code = lazy(() => import('./Code'))
 
 export default function App() {
   const [stage, setStage] = useState<HTMLDivElement | null>(null)
@@ -40,17 +39,14 @@ export default function App() {
           eventPrefix="client"
           eventSource={stage ?? undefined}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
-          orthographic>
+          orthographic
+          shadows>
           <Suspense>
             <Scene />
             <Env />
             <FX />
           </Suspense>
         </Canvas>
-
-        <Suspense>
-          <Code />
-        </Suspense>
 
         <Cursor />
       </div>

@@ -5,13 +5,13 @@ import { useControls } from 'leva'
 import { lazy, useMemo, useState } from 'react'
 import * as THREE from 'three'
 
-import { poof } from './Poof'
+import type { Pt } from '../../utils'
+import { BRICK } from '../../utils'
+import Shatter, { shatter } from './Shatter'
 
 const Geometry = lazy(() => import('./Geometry'))
 const Material = lazy(() => import('./Material'))
-const Output = lazy(() => import('./Output'))
 const Particle = lazy(() => import('./Particle'))
-const Poof = lazy(() => import('./Poof'))
 
 const ROT: [number, number, number] = [Math.PI / 36, -Math.PI / 9, 0]
 
@@ -19,58 +19,42 @@ const gridInvQ = new THREE.Quaternion()
   .setFromEuler(new THREE.Euler(...ROT))
   .invert()
 
-const HIDE_MS = 1600
+/** Brick heals well before its rubble finishes falling. */
+const HIDE_MS = 1000
 
 export default function Scene() {
   const { viewport } = useThree()
 
-  const { color, gridSize } = useControls({
-    color: { label: 'Color', value: '#f51155' },
-    gridSize: { label: 'Grid Size', max: 20, min: 1, value: 16 }
+  const { color, courses, mortar } = useControls('Muro', {
+    color: { label: 'Tijolo', value: '#a8532f' },
+    courses: { label: 'Fiadas', max: 30, min: 4, step: 1, value: 18 },
+    mortar: { label: 'Argamassa', value: '#b9b2a4' }
   })
 
-  const span = useMemo(
-    () => Math.max(4, Math.max(viewport.width, viewport.height) * 1.25),
-    [viewport.height, viewport.width]
+  const spacingY = useMemo(
+    () => (viewport.height * 1.45) / courses,
+    [courses, viewport.height]
   )
 
-  const steps = Math.max(gridSize - 1, 1)
-  const spacing = useMemo(() => span / steps, [span, steps])
-  const count = gridSize ** 2
+  const spacingX = spacingY * BRICK.courseW
+
+  const cols = useMemo(
+    () => Math.ceil((viewport.width * 1.75) / spacingX) + 2,
+    [spacingX, viewport.width]
+  )
+
+  const count = cols * courses
 
   const cellPos = (i: number): [number, number, number] => {
-    const row = Math.floor(i / gridSize)
+    const row = Math.floor(i / cols)
 
     return [
-      ((i % gridSize) - steps / 2) * spacing + (row % 2 ? spacing / 2 : 0),
-      (row - steps / 2) * spacing,
+      ((i % cols) - (cols - 1) / 2) * spacingX +
+        (row % 2 ? spacingX / 2 : 0),
+      (row - (courses - 1) / 2) * spacingY,
       0
     ]
   }
-
-  const highlight = useMemo(() => {
-    const target = new THREE.Vector3(
-      (viewport.width / 2) * 0.4,
-      (viewport.height / 2) * 0.4,
-      0
-    ).applyQuaternion(gridInvQ)
-
-    let best = -1
-    let bestDist = Infinity
-
-    for (let i = 0; i < count; i += 1) {
-      const [x, y] = cellPos(i)
-      const dist = (x - target.x) ** 2 + (y - target.y) ** 2
-
-      if (dist < bestDist) {
-        bestDist = dist
-        best = i
-      }
-    }
-
-    return best
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, gridSize, spacing, steps, viewport.height, viewport.width])
 
   const [hidden, setHidden] = useState<Set<number>>(() => new Set())
 
@@ -83,9 +67,23 @@ export default function Scene() {
 
     if (hidden.has(id)) return
 
+    const [bx, by] = cellPos(id)
+    const local = e.point.clone().applyQuaternion(gridInvQ)
+
+    const impact: Pt = [
+      Math.max(
+        -BRICK.width / 2,
+        Math.min(BRICK.width / 2, (local.x - bx) / spacingY)
+      ),
+      Math.max(
+        -BRICK.height / 2,
+        Math.min(BRICK.height / 2, (local.y - by) / spacingY)
+      )
+    ]
+
     setHidden(s => new Set(s).add(id))
 
-    poof(cellPos(id), spacing)
+    shatter({ color, impact, pos: cellPos(id), scale: spacingY })
 
     window.setTimeout(
       () =>
@@ -100,46 +98,50 @@ export default function Scene() {
     )
   }
 
-  const particles = useMemo(
+  const bricks = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => (
         <Particle
           color={color}
           hidden={hidden.has(i)}
-          highlight={i === highlight}
           id={i}
-          key={`${gridSize}-${i}`}
+          key={`${cols}-${courses}-${i}`}
           position={cellPos(i)}
-          spacing={spacing}
+          spacing={spacingY}
         />
       )),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [color, count, gridSize, hidden, highlight, spacing, steps]
+    [color, cols, count, courses, hidden, spacingX, spacingY]
   )
 
+  const mortarZ = (BRICK.depth / 2 - 0.14) * spacingY
+
   return (
-    <>
-      <group rotation={ROT}>
-        <Instances
-          key={gridSize}
-          onClick={onClickCell}
-          onPointerOut={() => {
-            document.body.style.cursor = ''
-          }}
-          onPointerOver={() => {
-            document.body.style.cursor = 'pointer'
-          }}
-          range={count}>
-          <Geometry />
-          <Material />
+    <group rotation={ROT}>
+      <mesh position={[0, 0, mortarZ]} receiveShadow>
+        <planeGeometry args={[viewport.width * 3, viewport.height * 3]} />
+        <meshStandardMaterial color={mortar} roughness={1} />
+      </mesh>
 
-          {particles}
-        </Instances>
+      <Instances
+        castShadow
+        key={`${cols}-${courses}`}
+        onClick={onClickCell}
+        onPointerOut={() => {
+          document.body.style.cursor = ''
+        }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer'
+        }}
+        range={count}
+        receiveShadow>
+        <Geometry />
+        <Material spacing={spacingY} />
 
-        <Poof />
-      </group>
+        {bricks}
+      </Instances>
 
-      <Output />
-    </>
+      <Shatter />
+    </group>
   )
 }

@@ -17,8 +17,8 @@ export default function FX() {
     {
       bloom: folder({
         bloomRadius: { max: 2, min: 0, step: 0.01, value: 0.95 },
-        bloomStrength: { max: 3, min: 0, step: 0.01, value: 0.25 },
-        bloomThreshold: { max: 1, min: 0, step: 0.01, value: 0.01 },
+        bloomStrength: { max: 3, min: 0, step: 0.01, value: 0.28 },
+        bloomThreshold: { max: 1, min: 0, step: 0.01, value: 0.8 },
         enableBloom: { value: true }
       }),
       grain: folder({
@@ -32,8 +32,8 @@ export default function FX() {
           },
           value: 0
         },
-        enableGrain: { value: false },
-        intensity: { max: 1, min: 0, step: 0.003, value: 0.02 },
+        enableGrain: { value: true },
+        intensity: { max: 1, min: 0, step: 0.003, value: 0.035 },
         size: { max: 5, min: 0.5, step: 0.1, value: 0.5 },
         speed: { max: 60, min: 0, step: 1, value: 0 }
       })

@@ -2,85 +2,56 @@ import type { InstanceProps } from '@react-three/drei'
 import { Instance } from '@react-three/drei'
 import gsap from 'gsap'
 import { useEffect, useMemo, useRef } from 'react'
-import type * as THREE from 'three'
+import * as THREE from 'three'
+
+const clamp = (n: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, n))
+
+/**
+ * Three low-discrepancy sequences so hue, saturation and lightness of a
+ * brick vary independently instead of drifting together.
+ */
+const jitter = (id: number) => [
+  (id * 0.6180339887498949) % 1,
+  (id * 0.7548776662466927) % 1,
+  (id * 0.5698402909980532) % 1
+]
 
 export default function Particle({
   color,
   hidden = false,
-  highlight,
   id = 0,
-  seed,
   spacing,
   ...props
 }: ParticleProps) {
   const ref = useRef<(THREE.Object3D & { color?: THREE.Color }) | null>(null)
   const init = useRef(false)
 
-  const stableSeed = useMemo(
-    () => seed ?? (id * 0.618033988749895) % 1,
-    [id, seed]
-  )
+  const tint = useMemo(() => {
+    const [s1, s2, s3] = jitter(id + 1)
+    const c = new THREE.Color(color)
+    const hsl = { h: 0, l: 0, s: 0 }
 
-  const scale = useMemo(() => spacing * 0.9, [spacing])
+    c.getHSL(hsl)
 
-  useEffect(() => {
-    const current = ref.current
-
-    if (!current) return
-
-    const duration = Math.PI / 2 + stableSeed * Math.PI
-    const delay = stableSeed * 1.8 + 0.2
-    const scalar = stableSeed * 0.05 - 0.05
-
-    const getRotation = () => ({
-      [stableSeed < 0.5 ? 'x' : 'z']: `+=${Math.PI * 0.5}`,
-      ease: ['power2.inOut', 'power3.inOut', 'power4.inOut'][
-        Math.floor(stableSeed * 3)
-      ]
-    })
-
-    const tl = gsap.timeline({
-      defaults: { delay, duration, ease: 'power2.inOut' },
-      onRepeat: () => {
-        tl.clear().to(current.rotation, getRotation())
-      },
-      onStart: () => {
-        gsap.to(current.scale, {
-          delay,
-          duration: 2,
-          ease: 'sine.inOut',
-          onComplete: () => {
-            gsap.set(current.scale, { x: scale, y: scale, z: scale })
-          },
-          repeat: 1,
-          x: `+=${scalar}`,
-          y: `+=${scalar}`,
-          yoyo: true,
-          z: `+=${scalar}`
-        })
-      },
-      repeat: -1,
-      repeatDelay: 2 + stableSeed
-    })
-
-    tl.clear().to(current.rotation, getRotation())
-
-    return () => {
-      tl.kill()
-    }
-  }, [stableSeed, scale])
+    return c.setHSL(
+      (hsl.h + (s1 - 0.5) * 0.035 + 1) % 1,
+      clamp(hsl.s * (1 + (s2 - 0.5) * 0.45), 0, 1),
+      clamp(hsl.l * (1 + (s3 - 0.5) * 0.5), 0.02, 0.95)
+    )
+  }, [color, id])
 
   useEffect(() => {
-    ref.current?.color?.set(highlight ? 0xffffff : color)
+    ref.current?.color?.copy(tint)
     ref.current?.updateMatrix()
-  }, [color, highlight])
+  }, [tint])
 
   useEffect(() => {
     const c = ref.current
 
     if (!c) return
 
-    const target = hidden ? 0.001 : scale
+    const target = hidden ? 0.001 : spacing
 
     if (!init.current) {
       init.current = true
@@ -89,16 +60,22 @@ export default function Particle({
       return
     }
 
+    if (hidden) {
+      c.scale.setScalar(target)
+      c.updateMatrix()
+      return
+    }
+
     gsap.to(c.scale, {
-      duration: hidden ? 0.32 : 0.55,
-      ease: hidden ? 'power2.in' : 'back.out(2.4)',
+      duration: 0.28,
+      ease: 'power2.out',
       onUpdate: () => c.updateMatrix(),
       overwrite: 'auto',
       x: target,
       y: target,
       z: target
     })
-  }, [hidden, scale])
+  }, [hidden, spacing])
 
   return <Instance color={color} ref={ref} {...props} />
 }
@@ -106,7 +83,6 @@ export default function Particle({
 interface ParticleProps extends InstanceProps {
   color: string
   hidden?: boolean
-  highlight?: boolean
-  seed?: number
+  id?: number
   spacing: number
 }
