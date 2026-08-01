@@ -17,7 +17,7 @@ export default function FX() {
     {
       bloom: folder({
         bloomRadius: { max: 2, min: 0, step: 0.01, value: 0.95 },
-        bloomStrength: { max: 3, min: 0, step: 0.01, value: 0.28 },
+        bloomStrength: { max: 3, min: 0, step: 0.01, value: 0.16 },
         bloomThreshold: { max: 1, min: 0, step: 0.01, value: 0.8 },
         enableBloom: { value: true }
       }),

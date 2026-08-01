@@ -20,7 +20,7 @@ const gridInvQ = new THREE.Quaternion()
   .invert()
 
 /** Brick heals well before its rubble finishes falling. */
-const HIDE_MS = 1000
+const HIDE_MS = 3000
 
 export default function Scene() {
   const { viewport } = useThree()

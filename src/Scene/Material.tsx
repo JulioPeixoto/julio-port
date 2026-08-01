@@ -23,19 +23,19 @@ float g = 1. - smoothstep(0., uRadius, d);
 float pulse = .5 + .5 * sin(uTime * 2.4 - d * 1.6);
 
 diffuseColor.rgb = mix(diffuseColor.rgb, 1. - diffuseColor.rgb, g * uInvert);
-diffuseColor.rgb *= 1. + g * (.12 + .16 * pulse);
+diffuseColor.rgb *= 1. + g * (.04 + .07 * pulse);
 `
 
 export default function Material({ spacing, ...props }: MaterialProps) {
   const pointer = useMemo(() => new THREE.Vector3(), [])
 
-  const { courses, invert, roughness } = useControls('Muro', {
-    courses: { label: 'Alcance (fiadas)', max: 10, min: 0.5, step: 0.1, value: 3 },
-    invert: { label: 'Invertido', max: 1, min: 0, step: 0.01, value: 0.85 },
+  const { halo, invert, roughness } = useControls('Muro', {
+    halo: { label: 'Halo (fiadas)', max: 10, min: 0.5, step: 0.1, value: 2.5 },
+    invert: { label: 'Invertido', max: 1, min: 0, step: 0.01, value: 0.4 },
     roughness: { label: 'Rugosidade', max: 1, min: 0.2, step: 0.01, value: 0.9 }
   })
 
-  const radius = courses * spacing
+  const radius = halo * spacing
 
   const uniforms = useMemo(
     () => ({
