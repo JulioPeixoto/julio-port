@@ -8,8 +8,7 @@ import * as THREE from 'three'
 import type { Pt } from '../../utils'
 import { BRICK } from '../../utils'
 import Fall, { fall } from './Fall'
-import type { IconSlot } from './Socials'
-import Socials, { SOCIALS } from './Socials'
+import { SOCIALS } from './socials'
 
 const Geometry = lazy(() => import('./Geometry'))
 const Material = lazy(() => import('./Material'))
@@ -189,22 +188,6 @@ export default function Scene() {
     [color, cols, count, courses, hidden, positions, spacingY]
   )
 
-  const slots = useMemo<IconSlot[]>(
-    () =>
-      SOCIALS.map(s => {
-        const id = placement[s.key]
-        const placed = id !== undefined && id >= 0 && id < count
-
-        return {
-          key: s.key,
-          position: placed ? cellPos(id) : [0, 0, 0],
-          visible: placed && !hidden.has(id)
-        }
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cols, count, courses, hidden, placement, spacingX, spacingY]
-  )
-
   const mortarZ = (BRICK.depth / 2 - 0.14) * spacingY
 
   return (
@@ -231,8 +214,6 @@ export default function Scene() {
 
         {bricks}
       </Instances>
-
-      <Socials scale={spacingY} slots={slots} />
 
       <Fall />
     </group>
