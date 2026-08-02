@@ -1,13 +1,18 @@
-import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 
 import { BRICK, createShape } from '../../utils'
 
 const BEVEL = 0.025
 
-export default function Geometry() {
-  const geometry = useMemo(() => {
-    const geometry = new THREE.ExtrudeGeometry(
+let cached: THREE.ExtrudeGeometry | null = null
+
+/**
+ * One brick, shared between the instanced wall and the loose brick that falls
+ * out of it, so the two can never drift apart.
+ */
+export function brickGeometry() {
+  if (!cached) {
+    cached = new THREE.ExtrudeGeometry(
       createShape(BRICK.width, BRICK.height, 0.04),
       {
         bevelEnabled: true,
@@ -19,12 +24,12 @@ export default function Geometry() {
       }
     )
 
-    geometry.center()
+    cached.center()
+  }
 
-    return geometry
-  }, [])
+  return cached
+}
 
-  useEffect(() => () => geometry.dispose(), [geometry])
-
-  return <primitive attach="geometry" object={geometry} />
+export default function Geometry() {
+  return <primitive attach="geometry" object={brickGeometry()} />
 }

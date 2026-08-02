@@ -48,6 +48,14 @@ export default function App() {
           </Suspense>
         </Canvas>
 
+        <div
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 38%, rgba(0,0,0,.28) 72%, rgba(0,0,0,.62) 100%)'
+          }}
+        />
+
         <Cursor />
       </div>
 

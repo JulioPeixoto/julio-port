@@ -8,8 +8,8 @@ const clamp = (n: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, n))
 
 /**
- * Three low-discrepancy sequences so hue, saturation and lightness of a
- * brick vary independently instead of drifting together.
+ * Low-discrepancy sequences so each property of a brick varies independently
+ * instead of drifting together.
  */
 const jitter = (id: number) => [
   (id * 0.6180339887498949) % 1,
@@ -21,6 +21,7 @@ export default function Particle({
   color,
   hidden = false,
   id = 0,
+  position,
   spacing,
   ...props
 }: ParticleProps) {
@@ -41,10 +42,30 @@ export default function Particle({
     )
   }, [color, id])
 
+  /** No two bricks are laid perfectly true; this is what kills the CG look. */
+  const flaw = useMemo(() => {
+    const [s1, s2, s3] = jitter(id * 3 + 11)
+
+    return {
+      depth: (s3 - 0.5) * 0.07,
+      rotY: (s2 - 0.5) * 0.05,
+      rotZ: (s1 - 0.5) * 0.035
+    }
+  }, [id])
+
+  const pos = useMemo<[number, number, number]>(
+    () => [position[0], position[1], position[2] + flaw.depth * spacing],
+    [flaw.depth, position, spacing]
+  )
+
   useEffect(() => {
     ref.current?.color?.copy(tint)
     ref.current?.updateMatrix()
   }, [tint])
+
+  useEffect(() => {
+    ref.current?.updateMatrix()
+  }, [flaw, pos])
 
   useEffect(() => {
     const c = ref.current
@@ -77,12 +98,21 @@ export default function Particle({
     })
   }, [hidden, spacing])
 
-  return <Instance color={color} ref={ref} {...props} />
+  return (
+    <Instance
+      color={color}
+      position={pos}
+      ref={ref}
+      rotation={[0, flaw.rotY, flaw.rotZ]}
+      {...props}
+    />
+  )
 }
 
-interface ParticleProps extends InstanceProps {
+interface ParticleProps extends Omit<InstanceProps, 'position'> {
   color: string
   hidden?: boolean
   id?: number
+  position: [number, number, number]
   spacing: number
 }

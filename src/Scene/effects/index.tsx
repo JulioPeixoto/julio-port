@@ -32,8 +32,8 @@ export default function FX() {
           },
           value: 0
         },
-        enableGrain: { value: true },
-        intensity: { max: 1, min: 0, step: 0.003, value: 0.035 },
+        enableGrain: { value: false },
+        intensity: { max: 1, min: 0, step: 0.003, value: 0.02 },
         size: { max: 5, min: 0.5, step: 0.1, value: 0.5 },
         speed: { max: 60, min: 0, step: 1, value: 0 }
       })
