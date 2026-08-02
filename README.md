@@ -2,8 +2,6 @@
 
 Portfólio pessoal — cena WebGL interativa.
 
-Base adaptada de [OutThisLife/brooklyn.sh](https://github.com/OutThisLife/brooklyn.sh).
-
 ## Stack
 
 - **React 18 + TypeScript**, build com **Vite 5** (`@vitejs/plugin-react-swc`)
@@ -50,12 +48,3 @@ src/
 utils/
 public/              # texturas (tex0/1/2.png), favicon
 ```
-
-## Personalizar
-
-- **Links do menu**: `src/App.tsx` — o LinkedIn ainda está com placeholder (`SEU-USUARIO`).
-- **Currículo**: coloque um `resume.pdf` em `public/` (o botão "Resume" já aponta pra lá).
-- **Favicon**: `public/favicon.ico` ainda é o original, troque.
-- **Cor e grid**: valores padrão em `src/Scene/index.tsx` (`color`, `gridSize`).
-- **Texturas**: `public/tex0.png` e `tex1.png` são carregadas em `Material.tsx`.
-- **Título e meta tags**: `index.html`.

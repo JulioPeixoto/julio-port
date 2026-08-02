@@ -24,9 +24,6 @@ export default function App() {
         '_blank',
         'noopener,noreferrer'
       )
-    ),
-    Resume: button(() =>
-      window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
     )
   })
 
@@ -61,7 +58,14 @@ export default function App() {
 
       <Leva
         collapsed
-        theme={{ colors: { accent2: '#ec4899' } }}
+        theme={{
+          colors: {
+            accent1: '#8a4226',
+            accent2: '#a8532f',
+            accent3: '#c1683f',
+            highlight3: '#e8ddd2'
+          }
+        }}
         titleBar={{ filter: false }}
       />
     </>

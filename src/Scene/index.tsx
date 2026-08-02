@@ -12,6 +12,7 @@ import { SOCIALS } from './socials'
 
 const Geometry = lazy(() => import('./Geometry'))
 const Material = lazy(() => import('./Material'))
+const Output = lazy(() => import('./Output'))
 const Particle = lazy(() => import('./Particle'))
 
 const ROT: [number, number, number] = [Math.PI / 36, -Math.PI / 9, 0]
@@ -191,31 +192,35 @@ export default function Scene() {
   const mortarZ = (BRICK.depth / 2 - 0.14) * spacingY
 
   return (
-    <group ref={groupRef} rotation={ROT}>
-      <mesh position={[0, 0, mortarZ]} receiveShadow>
-        <planeGeometry args={[viewport.width * 3, viewport.height * 3]} />
-        <meshStandardMaterial color={mortar} roughness={1} />
-      </mesh>
+    <>
+      <group ref={groupRef} rotation={ROT}>
+        <mesh position={[0, 0, mortarZ]} receiveShadow>
+          <planeGeometry args={[viewport.width * 3, viewport.height * 3]} />
+          <meshStandardMaterial color={mortar} roughness={1} />
+        </mesh>
 
-      <Instances
-        castShadow
-        key={`${cols}-${courses}`}
-        onClick={onClickCell}
-        onPointerOut={() => {
-          document.body.style.cursor = ''
-        }}
-        onPointerOver={() => {
-          document.body.style.cursor = 'pointer'
-        }}
-        range={count}
-        receiveShadow>
-        <Geometry />
-        <Material spacing={spacingY} />
+        <Instances
+          castShadow
+          key={`${cols}-${courses}`}
+          onClick={onClickCell}
+          onPointerOut={() => {
+            document.body.style.cursor = ''
+          }}
+          onPointerOver={() => {
+            document.body.style.cursor = 'pointer'
+          }}
+          range={count}
+          receiveShadow>
+          <Geometry />
+          <Material spacing={spacingY} />
 
-        {bricks}
-      </Instances>
+          {bricks}
+        </Instances>
 
-      <Fall />
-    </group>
+        <Fall />
+      </group>
+
+      <Output />
+    </>
   )
 }

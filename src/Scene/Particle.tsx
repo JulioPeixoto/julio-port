@@ -68,10 +68,15 @@ export default function Particle({
   }, [pos])
 
   /**
-   * The original site had every tile drifting on its own loop. A wall has to
-   * stay read as solid, so this keeps the staggered, seeded structure but
-   * swings only a couple of degrees. Deliberately independent of `pos`: a
-   * re-render must never restart the loop.
+   * The original site's tiles spun a quarter-turn in place, which reads clean
+   * because they are symmetric cubes. A brick is not, and it sits buried in
+   * mortar, so the equivalent here is: ease out of the wall, half-turn,
+   * settle back flush. A half-turn lands the brick congruent with itself, so
+   * neither the rotation reset nor the reroll is visible.
+   *
+   * Timing is true random, rerolled every cycle — the low-discrepancy seeds
+   * are linear in `id`, and id is linear in the grid, so seeding the flips
+   * with them marches diagonal waves across the wall.
    */
   useEffect(() => {
     const c = ref.current
@@ -81,31 +86,54 @@ export default function Particle({
     c.rotation.set(0, flaw.rotY, flaw.rotZ)
     c.updateMatrix()
 
-    const [s1, s2] = jitter(id * 7 + 3)
-    const amp = 0.018 + s2 * 0.03
+    const lift = spacing * 1.5
 
-    const tl = gsap.timeline({
-      defaults: {
-        duration: 1.8 + s1 * 2,
-        ease: 'sine.inOut',
-        onUpdate: () => c.updateMatrix(),
-        repeat: 1,
-        yoyo: true
-      },
-      delay: s1 * 3.5,
-      repeat: -1,
-      repeatDelay: 2.5 + s2 * 4.5
-    })
+    let tl: gsap.core.Timeline | null = null
+    let next: gsap.core.Tween | null = null
 
-    tl.to(c.rotation, {
-      y: flaw.rotY + (s1 < 0.5 ? amp : -amp),
-      z: flaw.rotZ + (s2 < 0.5 ? -amp : amp)
-    })
+    const flip = () => {
+      const duration = gsap.utils.random(1.4, 3.2)
+      const axis = Math.random() < 0.5 ? 'x' : 'y'
+      const base = axis === 'x' ? 0 : flaw.rotY
+      const dir = Math.random() < 0.5 ? 1 : -1
+      const ease = gsap.utils.random([
+        'power1.inOut',
+        'power2.inOut',
+        'power3.inOut',
+        'power4.inOut'
+      ])
+
+      tl = gsap.timeline({
+        defaults: { onUpdate: () => c.updateMatrix() },
+        onComplete: () => {
+          c.rotation.set(0, flaw.rotY, flaw.rotZ)
+          next = gsap.delayedCall(gsap.utils.random(20, 70), flip)
+        }
+      })
+
+      tl.to(c.position, {
+        duration: 0.5,
+        ease: 'power2.out',
+        z: pos[2] + lift
+      })
+        .to(c.rotation, { duration, ease, [axis]: base + Math.PI * dir }, 0.2)
+        .to(
+          c.position,
+          { duration: 0.6, ease: 'power2.inOut', z: pos[2] },
+          0.2 + duration - 0.45
+        )
+    }
+
+    next = gsap.delayedCall(Math.random() * 60, flip)
 
     return () => {
-      tl.kill()
+      tl?.kill()
+      next?.kill()
+      c.rotation.set(0, flaw.rotY, flaw.rotZ)
+      c.position.z = pos[2]
+      c.updateMatrix()
     }
-  }, [flaw, id])
+  }, [flaw, pos, spacing])
 
   useEffect(() => {
     const c = ref.current
