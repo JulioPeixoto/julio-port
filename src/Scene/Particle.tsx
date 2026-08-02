@@ -65,7 +65,47 @@ export default function Particle({
 
   useEffect(() => {
     ref.current?.updateMatrix()
-  }, [flaw, pos])
+  }, [pos])
+
+  /**
+   * The original site had every tile drifting on its own loop. A wall has to
+   * stay read as solid, so this keeps the staggered, seeded structure but
+   * swings only a couple of degrees. Deliberately independent of `pos`: a
+   * re-render must never restart the loop.
+   */
+  useEffect(() => {
+    const c = ref.current
+
+    if (!c) return
+
+    c.rotation.set(0, flaw.rotY, flaw.rotZ)
+    c.updateMatrix()
+
+    const [s1, s2] = jitter(id * 7 + 3)
+    const amp = 0.018 + s2 * 0.03
+
+    const tl = gsap.timeline({
+      defaults: {
+        duration: 1.8 + s1 * 2,
+        ease: 'sine.inOut',
+        onUpdate: () => c.updateMatrix(),
+        repeat: 1,
+        yoyo: true
+      },
+      delay: s1 * 3.5,
+      repeat: -1,
+      repeatDelay: 2.5 + s2 * 4.5
+    })
+
+    tl.to(c.rotation, {
+      y: flaw.rotY + (s1 < 0.5 ? amp : -amp),
+      z: flaw.rotZ + (s2 < 0.5 ? -amp : amp)
+    })
+
+    return () => {
+      tl.kill()
+    }
+  }, [flaw, id])
 
   useEffect(() => {
     const c = ref.current
@@ -99,13 +139,7 @@ export default function Particle({
   }, [hidden, spacing])
 
   return (
-    <Instance
-      color={color}
-      position={pos}
-      ref={ref}
-      rotation={[0, flaw.rotY, flaw.rotZ]}
-      {...props}
-    />
+    <Instance color={color} position={pos} ref={ref} {...props} />
   )
 }
 

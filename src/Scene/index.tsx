@@ -164,6 +164,16 @@ export default function Scene() {
     )
   }
 
+  /**
+   * Held apart from `bricks` so breaking one brick does not hand every other
+   * one a fresh position array, which would restart their idle animations.
+   */
+  const positions = useMemo(
+    () => Array.from({ length: count }, (_, i) => cellPos(i)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cols, count, courses, spacingX, spacingY]
+  )
+
   const bricks = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => (
@@ -172,12 +182,11 @@ export default function Scene() {
           hidden={hidden.has(i)}
           id={i}
           key={`${cols}-${courses}-${i}`}
-          position={cellPos(i)}
+          position={positions[i]}
           spacing={spacingY}
         />
       )),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [color, cols, count, courses, hidden, spacingX, spacingY]
+    [color, cols, count, courses, hidden, positions, spacingY]
   )
 
   const slots = useMemo<IconSlot[]>(
