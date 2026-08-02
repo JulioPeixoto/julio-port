@@ -36,6 +36,14 @@ const FADE_FROM = 0.6
 /** Gravity in course-heights per second squared. */
 const G = -11
 
+/**
+ * The mortar plane sits just behind the brick faces, so a brick starting at
+ * its slot in the wall is mostly buried in it and renders sliced. Under an
+ * orthographic camera a shift along Z costs nothing on screen — only
+ * occlusion order — so the loose brick is simply born clear of the wall.
+ */
+const CLEAR = 1.5
+
 const DUST = 18
 
 /** Fraction of the flight the dust cloud lives for. */
@@ -75,9 +83,7 @@ function FallOne({ ev }: { ev: FallEvent }) {
       velocity: new THREE.Vector3(
         ix * 0.9,
         0.3 + Math.random() * 0.3,
-        // Orthographic camera: +Z reads as nothing, so take only enough to
-        // clear the wall face and spend the rest on the visible arc.
-        0.8 + Math.random() * 0.4
+        2.4 + Math.random() * 0.8
       )
     }
   }, [ev.impact])
@@ -114,7 +120,7 @@ function FallOne({ ev }: { ev: FallEvent }) {
         brick.position.set(
           motion.velocity.x * time,
           motion.velocity.y * time + 0.5 * G * time * time,
-          motion.velocity.z * time
+          CLEAR + motion.velocity.z * time
         )
 
         brick.setRotationFromAxisAngle(motion.axis, motion.omega * time)

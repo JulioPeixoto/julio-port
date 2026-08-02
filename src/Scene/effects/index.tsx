@@ -42,7 +42,7 @@ export default function FX() {
   )
 
   return (
-    <Effects anisotropy={16} disableGamma multisamping={0}>
+    <Effects anisotropy={16} disableGamma multisamping={8}>
       <grainPass
         args={[
           {

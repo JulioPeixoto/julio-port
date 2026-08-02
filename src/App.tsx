@@ -35,7 +35,7 @@ export default function App() {
       <div className="fixed inset-0" ref={setStage}>
         <Canvas
           camera={{ zoom: 600 }}
-          dpr={[1, 1.5]}
+          dpr={[1, 2]}
           eventPrefix="client"
           eventSource={stage ?? undefined}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
