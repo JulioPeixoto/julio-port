@@ -17,6 +17,8 @@ const jitter = (id: number) => [
   (id * 0.5698402909980532) % 1
 ]
 
+const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)]
+
 export default function Particle({
   color,
   hidden = false,
@@ -71,8 +73,11 @@ export default function Particle({
    * The original site's tiles spun a quarter-turn in place, which reads clean
    * because they are symmetric cubes. A brick is not, and it sits buried in
    * mortar, so the equivalent here is: ease out of the wall, half-turn,
-   * settle back flush. A half-turn lands the brick congruent with itself, so
-   * neither the rotation reset nor the reroll is visible.
+   * settle back flush. The spin is applied in the brick's local frame, on top
+   * of its flawed rest pose — only then is the half-turn exactly congruent
+   * with that pose, so neither the rotation reset nor the reroll is visible.
+   * (Tweening the Euler component instead would spin about the world axis and
+   * land with the flaw tilts mirrored.)
    *
    * Timing is true random, rerolled every cycle — the low-discrepancy seeds
    * are linear in `id`, and id is linear in the grid, so seeding the flips
@@ -88,13 +93,17 @@ export default function Particle({
 
     const lift = spacing * 1.5
 
+    const qRest = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(0, flaw.rotY, flaw.rotZ)
+    )
+    const qSpin = new THREE.Quaternion()
+
     let tl: gsap.core.Timeline | null = null
     let next: gsap.core.Tween | null = null
 
     const flip = () => {
       const duration = gsap.utils.random(1.4, 3.2)
-      const axis = Math.random() < 0.5 ? 'x' : 'y'
-      const base = axis === 'x' ? 0 : flaw.rotY
+      const axis = AXES[Math.random() < 0.5 ? 0 : 1]
       const dir = Math.random() < 0.5 ? 1 : -1
       const ease = gsap.utils.random([
         'power1.inOut',
@@ -102,11 +111,13 @@ export default function Particle({
         'power3.inOut',
         'power4.inOut'
       ])
+      const spin = { angle: 0 }
 
       tl = gsap.timeline({
         defaults: { onUpdate: () => c.updateMatrix() },
         onComplete: () => {
           c.rotation.set(0, flaw.rotY, flaw.rotZ)
+          c.updateMatrix()
           next = gsap.delayedCall(gsap.utils.random(20, 70), flip)
         }
       })
@@ -116,7 +127,20 @@ export default function Particle({
         ease: 'power2.out',
         z: pos[2] + lift
       })
-        .to(c.rotation, { duration, ease, [axis]: base + Math.PI * dir }, 0.2)
+        .to(
+          spin,
+          {
+            angle: Math.PI * dir,
+            duration,
+            ease,
+            onUpdate: () => {
+              qSpin.setFromAxisAngle(axis, spin.angle)
+              c.quaternion.copy(qRest).multiply(qSpin)
+              c.updateMatrix()
+            }
+          },
+          0.2
+        )
         .to(
           c.position,
           { duration: 0.6, ease: 'power2.inOut', z: pos[2] },

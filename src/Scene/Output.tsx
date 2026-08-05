@@ -6,7 +6,7 @@ export default function Output() {
 
   return (
     <group position={[-(width / 2 - 0.05), height / 2 - 0.05, 2]}>
-      <Text anchorX="left" anchorY="top" fontSize={0.02} fontWeight={500}>
+      <Text anchorX="left" anchorY="top" fontSize={0.02} fontWeight={300} color={"ffffff"}>
         I am an AI engineer, full stack; top ~0.10% token user{'\n'}
         &amp; have been coding since I was 14{'\n'}
         w/ 4 years of professional experience
